@@ -18,6 +18,7 @@ try:
     with open("data.pickle", "rb") as f:
         words, labels, training, output = pickle.load(f)
 except:
+#Preprosessing our data so that we can build the model
     words = []
     labels = []
     docs_x = []
@@ -60,7 +61,7 @@ except:
         training.append(bag)
         output.append(output_row)
 
-
+#Since the tflearn takes only np arrays so they are converted
     training = numpy.array(training)
     output = numpy.array(output)
 
@@ -69,19 +70,20 @@ except:
 
 #tensorflow.reset_default_graph()
 
-ann = tflearn.input_data(shape=[None, len(training[0])])
-ann = tflearn.fully_connected(ann, 8)
-ann = tflearn.fully_connected(ann, 8)
-ann = tflearn.fully_connected(ann, len(output[0]), activation="softmax")
+#Building the model with the help of tflearn
+ann = tflearn.input_data(shape=[None, len(training[0])])#input layer
+ann = tflearn.fully_connected(ann, 8)#1st hidden layer
+ann = tflearn.fully_connected(ann, 8)#2nd Hidden layer
+ann = tflearn.fully_connected(ann, len(output[0]), activation="softmax")#output layer
 ann = tflearn.regression(ann)
 
 model = tflearn.DNN(ann)
 
-
+#Training our model
 model.fit(training, output, n_epoch=1000, batch_size=8, show_metric=True)
 model.save("model.tflearn")
 
-
+#This function takes the input word and tokenizes and stems it for our model
 def bag_of_words(s, words):
     bag = [0 for _ in range(len(words))]
 
@@ -95,7 +97,7 @@ def bag_of_words(s, words):
             
     return numpy.array(bag)
 
-
+#This is the main fuction that takes the user input and returns the suitable output to the user
 def chat():
     print("Start talking with the bot (type quit to stop)!")
     while True:
@@ -106,7 +108,7 @@ def chat():
         results = model.predict([bag_of_words(inp, words)])[0]
         results_index = numpy.argmax(results)
         tag = labels[results_index]
-
+        #Since the model outputs the probabilty of each respone we only select the ones that are higher than a particular thresshold
         if results[results_index] > 0.7:
 
           for tg in data["intents"]:
